@@ -1,0 +1,722 @@
+{
+  "name": "Projeto 02_v03",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        1760
+      ],
+      "id": "e9a5c2b4-2667-4e82-9160-36b453a48fe7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "5dGPy482DMIlhY8e",
+          "name": "n8n aslfilho"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Agente IA - Assistente de Nota Fiscal - Exercício 02 - I2A2",
+        "height": 640,
+        "width": 1280,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        1500
+      ],
+      "id": "5fb0f4c4-e86a-41c9-b441-5e04d5b8fd72",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        1940
+      ],
+      "id": "a937817a-b07b-469b-a58c-b9edff369ab3",
+      "name": "Calculadora"
+    },
+    {
+      "parameters": {
+        "content": "### tool: Base CSV - Calculadora",
+        "height": 220,
+        "width": 800,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -680,
+        1900
+      ],
+      "typeVersion": 1,
+      "id": "a4e0dc48-e4bc-4c23-96aa-c5fc20a5fda6",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -540,
+        1760
+      ],
+      "id": "8bee4cfc-6517-47bd-a49c-ab4e01e3d839",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "nfs_cabecalho",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        1940
+      ],
+      "id": "49b30318-3525-429b-9a50-d0ea96bb7f3a",
+      "name": "tool_nfs_cabecalho",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RgJ9FZ0S8zQQ4W5f",
+          "name": "Supabase n8n aslfilho"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "nfs_itens",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        1940
+      ],
+      "id": "19b8ae1a-8e27-4aad-a3e7-ff81f228d195",
+      "name": "tool_nfs_itens",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RgJ9FZ0S8zQQ4W5f",
+          "name": "Supabase n8n aslfilho"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=# Agente IA - Assistente de Nota Fiscal (Versão 1.1 - Formatação por Linhas)\n\nVocê é um **Assistente de Inteligência Artificial especializado em Notas Fiscais**.\n\nSua missão é **responder exclusivamente a perguntas sobre as Notas Fiscais da empresa**, utilizando **apenas os dados disponíveis nas tabelas Supabase: `nfs_cabecalho` e `nfs_itens`**, acessíveis através das ferramentas (tools) disponíveis.\n\n## 🎯 Ferramentas (Tools) disponíveis:\n\n- **tool_nfs_cabecalho (getAll: row):**\nConsulta dados da tabela `nfs_cabecalho`.\n\n- **tool_nfs_itens (getAll: row):**\nConsulta dados da tabela `nfs_itens`.\n\n- **calculadora:**\nUse sempre que precisar realizar qualquer tipo de cálculo numérico (soma, média, contagem, etc).\n\n## ✅ Regras obrigatórias de comportamento:\n\n- Data de hoje: {{ $now.format('dd/MM/yyyy') }}.\n\n1. **Responda apenas perguntas relacionadas a Notas Fiscais.**\nIgnore ou recuse responder perguntas de outros temas.\n\n2. **Nunca invente dados.**\nTodas as respostas devem ser baseadas exclusivamente nos dados reais das tabelas.\n\n3. **Use sempre as tools corretas:**\n- Para informações de cabeçalho de NF: use a **tool_nfs_cabecalho**.\n- Para informações de itens de NF: use a **tool_nfs_itens**.\n- Para cálculos: use a **calculadora**.\n\n4. **Campo \"Número\":**\nConsidere o campo `Número` como **chave primária para cruzamento entre as duas tabelas**.\n\n5. **Se a pergunta não tiver detalhes suficientes**, faça perguntas ao usuário para obter mais informações antes de tentar responder.\n\n6. **Formatação de valores monetários:**\nExiba todos os valores em formato **Real Brasileiro (R$)** com separador de milhar e duas casas decimais.\nExemplo:\n**R$ 1.450,34**\n\n7. **Nova regra de formatação de resposta:**\nSempre que citar múltiplos campos de uma tabela (exemplo: CPF, Nome, Montante), apresente **cada campo em uma linha separada**, no formato de lista com bullets ou hífens. Exemplo:\n\n```\nO fornecedor com maior montante recebido é:\n\n- CPF/CNPJ Emitente: 58309709000153\n- Razão Social: CHEMYUNION LTDA\n- Montante Total: R$ 1.292.418,75\n```\n\n**Isso vale para qualquer resposta que envolva múltiplos campos.**\n\n8. **Respostas sempre objetivas, claras e diretas.**\nSe forem listas, use tópicos ou bullets.\n\n## ✅ Exemplos de comportamento esperado:\n\n- **Pergunta:** Qual fornecedor teve o maior montante de faturamento?\n**Resposta:**\n```\nO fornecedor com maior montante de faturamento é:\n\n- CPF/CNPJ Emitente: 58309709000153\n- Razão Social: CHEMYUNION LTDA\n- Montante Total: R$ 1.292.418,75\n```\n\n- **Pergunta:** Quais os itens da Nota Fiscal 2525?\n**Resposta:**\n```\nItens da Nota Fiscal 2525:\n\n- CINEMATICO RODO-AR – R$ 3.000,00\n- LANTERNA TATERAL CARRETA LED – R$ 399,00\n- ESPIRAL NYLON CABINE AMARELO – R$ 1.596,00\n```\n\n- **Pergunta:** Quantas Notas Fiscais foram emitidas por UF?\n**Resposta:**\n```\nSP: 26\nRJ: 13\nRS: 8\n```\n\n## ✅ ⚠️ Resumo Final:\n- Nunca invente.\n- Sempre use as ferramentas.\n- Pergunte ao usuário se faltar detalhe.\n- Formatação sempre clara, objetiva, valores em R$, e cada campo separado por linha se houver múltiplos campos.\n- Só responda sobre Notas Fiscais.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -580,
+        1580
+      ],
+      "id": "b5a12a29-0f51-4796-8dd0-c6fd8103f37f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Olá! 👋\nSou o seu Assistente de Nota Fiscal que usa IA. Como posso ajudar?",
+        "options": {
+          "allowFileUploads": true,
+          "inputPlaceholder": " Digite sua pergunta...",
+          "subtitle": "Estamos aqui para ajudar você 24 horas por dia, 7 dias por semana.",
+          "title": "I2A2 - Agentes em Ação - Assistente Inteligente de Nota Fiscal "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2140,
+        1360
+      ],
+      "id": "d62ab4a3-633a-45ae-abe7-4eb630f54024",
+      "name": "When chat message received",
+      "webhookId": "84a08df2-b103-47b8-8126-a65faaf60cbb"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "=data0"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        -1060,
+        1120
+      ],
+      "id": "439bf8e0-13d0-479b-8a77-6f426b98fa07",
+      "name": "Compression"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "=file_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        900
+      ],
+      "id": "10fde952-e5dc-4609-a8bb-9b6731d98186",
+      "name": "Extrair - NFs_Cabecalho"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "=file_1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -780,
+        1120
+      ],
+      "id": "e484ffa1-e8ab-478b-8b5a-08b94b7c925e",
+      "name": "Extrair - NFs_Itens"
+    },
+    {
+      "parameters": {
+        "tableId": "nfs_cabecalho",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        900
+      ],
+      "id": "876aae60-a07d-4e61-892e-2f87133731c0",
+      "name": "Supabase - nfs_cabecalho",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RgJ9FZ0S8zQQ4W5f",
+          "name": "Supabase n8n aslfilho"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "nfs_itens",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "CHAVE DE ACESSO",
+              "fieldValue": "={{ $json['CHAVE DE ACESSO'] }}"
+            },
+            {
+              "fieldId": "MODELO",
+              "fieldValue": "={{ $json.MODELO }}"
+            },
+            {
+              "fieldId": "SÉRIE",
+              "fieldValue": "={{ $json['SÉRIE'] }}"
+            },
+            {
+              "fieldId": "NÚMERO",
+              "fieldValue": "={{ $json['NÚMERO'] }}"
+            },
+            {
+              "fieldId": "NATUREZA DA OPERAÇÃO",
+              "fieldValue": "={{ $json['NATUREZA DA OPERAÇÃO'] }}"
+            },
+            {
+              "fieldId": "DATA EMISSÃO",
+              "fieldValue": "={{ $json['DATA EMISSÃO'] }}"
+            },
+            {
+              "fieldId": "CPF/CNPJ Emitente",
+              "fieldValue": "={{ $json['CPF/CNPJ Emitente'] }}"
+            },
+            {
+              "fieldId": "RAZÃO SOCIAL EMITENTE",
+              "fieldValue": "={{ $json['RAZÃO SOCIAL EMITENTE'] }}"
+            },
+            {
+              "fieldId": "INSCRIÇÃO ESTADUAL EMITENTE",
+              "fieldValue": "={{ $json['INSCRIÇÃO ESTADUAL EMITENTE'] }}"
+            },
+            {
+              "fieldId": "UF EMITENTE",
+              "fieldValue": "={{ $json['UF EMITENTE'] }}"
+            },
+            {
+              "fieldId": "MUNICÍPIO EMITENTE",
+              "fieldValue": "={{ $json['MUNICÍPIO EMITENTE'] }}"
+            },
+            {
+              "fieldId": "CNPJ DESTINATÁRIO",
+              "fieldValue": "={{ $json['CNPJ DESTINATÁRIO'] }}"
+            },
+            {
+              "fieldId": "NOME DESTINATÁRIO",
+              "fieldValue": "={{ $json['NOME DESTINATÁRIO'] }}"
+            },
+            {
+              "fieldId": "UF DESTINATÁRIO",
+              "fieldValue": "={{ $json['UF DESTINATÁRIO'] }}"
+            },
+            {
+              "fieldId": "INDICADOR IE DESTINATÁRIO",
+              "fieldValue": "={{ $json['INDICADOR IE DESTINATÁRIO'] }}"
+            },
+            {
+              "fieldId": "DESTINO DA OPERAÇÃO",
+              "fieldValue": "={{ $json['DESTINO DA OPERAÇÃO'] }}"
+            },
+            {
+              "fieldId": "CONSUMIDOR FINAL",
+              "fieldValue": "={{ $json['CONSUMIDOR FINAL'] }}"
+            },
+            {
+              "fieldId": "PRESENÇA DO COMPRADOR",
+              "fieldValue": "={{ $json['PRESENÇA DO COMPRADOR'] }}"
+            },
+            {
+              "fieldId": "NÚMERO PRODUTO",
+              "fieldValue": "={{ $json['NÚMERO PRODUTO'] }}"
+            },
+            {
+              "fieldId": "DESCRIÇÃO DO PRODUTO/SERVIÇO",
+              "fieldValue": "={{ $json['DESCRIÇÃO DO PRODUTO/SERVIÇO'] }}"
+            },
+            {
+              "fieldId": "CÓDIGO NCM/SH",
+              "fieldValue": "={{ $json['CÓDIGO NCM/SH'] }}"
+            },
+            {
+              "fieldId": "QUANTIDADE",
+              "fieldValue": "={{ $json.QUANTIDADE }}"
+            },
+            {
+              "fieldId": "UNIDADE",
+              "fieldValue": "={{ $json.UNIDADE }}"
+            },
+            {
+              "fieldId": "VALOR UNITÁRIO",
+              "fieldValue": "={{ $json['VALOR UNITÁRIO'] }}"
+            },
+            {
+              "fieldId": "VALOR TOTAL",
+              "fieldValue": "={{ $json['VALOR TOTAL'] }}"
+            },
+            {
+              "fieldId": "CFOP",
+              "fieldValue": "={{ $json.CFOP }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        1120
+      ],
+      "id": "d6c61b87-9ec0-44d7-b4d6-b5ad552b6548",
+      "name": "Supabase - nfs_itens",
+      "credentials": {
+        "supabaseApi": {
+          "id": "RgJ9FZ0S8zQQ4W5f",
+          "name": "Supabase n8n aslfilho"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Gestão Banco de Dados",
+        "height": 320,
+        "width": 540,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1680,
+        840
+      ],
+      "typeVersion": 1,
+      "id": "9de2a24e-4bfc-4113-8dcf-8ff5d80df26c",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "delete from nfs_cabecalho;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1600,
+        940
+      ],
+      "id": "82349ea7-ec1d-4e29-a848-51efb132dcb9",
+      "name": "Deleta - nfs_cabecalho",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dHg6Urbyic7AUE8v",
+          "name": "Postgres Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "delete from nfs_itens;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -1380,
+        940
+      ],
+      "id": "8fb2d0f0-4535-462f-bbff-24091379ad0e",
+      "name": "Deleta - nfs_itens",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "dHg6Urbyic7AUE8v",
+          "name": "Postgres Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## UPLOAD - Arquivo zip",
+        "height": 640,
+        "width": 1280,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        820
+      ],
+      "id": "7b844611-be1c-4ad7-b463-22d5124b1956",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ef3de6cf-fca8-4ff1-b7e1-49613da477ed",
+              "name": "mensagem2",
+              "value": "Arquivos NFs_Cabecalho e NFs_Itens OK!",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -340,
+        1120
+      ],
+      "id": "24eae2c8-e0ec-4e42-a890-0c86ede902e6",
+      "name": "Saida"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        900
+      ],
+      "id": "c4ca3ef5-b918-4128-822c-a4d31c6a12a1",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.files }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "9ece3103-0d3c-43f1-ab3a-e1a7e9703231"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Com Anexo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ecaf01da-1124-421f-88d2-a2bcc0e2ff81",
+                    "leftValue": "={{ $json.chatInput }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Somente Texto"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "allMatchingOutputs": false
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1900,
+        1360
+      ],
+      "id": "dc960102-3a7f-484d-b4e9-d2cd2a2839bc",
+      "name": "Switch",
+      "retryOnFail": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculadora": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tool_nfs_cabecalho": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tool_nfs_itens": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "Extrair - NFs_Itens",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extrair - NFs_Cabecalho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair - NFs_Cabecalho": {
+      "main": [
+        [
+          {
+            "node": "Supabase - nfs_cabecalho",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair - NFs_Itens": {
+      "main": [
+        [
+          {
+            "node": "Supabase - nfs_itens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - nfs_cabecalho": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - nfs_itens": {
+      "main": [
+        [
+          {
+            "node": "Saida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Deleta - nfs_cabecalho",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Deleta - nfs_itens": {
+      "main": [
+        []
+      ]
+    },
+    "Deleta - nfs_cabecalho": {
+      "main": [
+        [
+          {
+            "node": "Deleta - nfs_itens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d61ae8c9-146f-4ca1-84b9-a70c652f473c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7c8f181b5921934f021c512c99bef9e7570c43577a5969a235e431b219f74b49"
+  },
+  "id": "L8Tzo9r1ekMMOABY",
+  "tags": [
+    {
+      "createdAt": "2025-03-11T03:19:58.326Z",
+      "updatedAt": "2025-03-11T03:19:58.326Z",
+      "id": "M7I7BewyzkhOsTsQ",
+      "name": "Funcionando"
+    }
+  ]
+}
